@@ -7,23 +7,25 @@ import numpy as np
 import sys
 import time
 
-if(len(sys.argv) != 3):
-    print("Usage : {} hostname port".format(sys.argv[0]))
-    print("e.g.   {} 192.168.0.39 1080".format(sys.argv[0]))
-    sys.exit(-1)
+#if(len(sys.argv) != 3):
+#    print("Usage : {} hostname port".format(sys.argv[0]))
+#    print("e.g.   {} 192.168.0.39 1080".format(sys.argv[0]))
+#    sys.exit(-1)
 
 
 cv2.namedWindow("Image")
 
 # Create a UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-host = sys.argv[1]
-port = int(sys.argv[2])
-server_address = (host, port)
+host = '203.237.53.160'
+port = 1080
+address = (host, port)
+
+sock.bind(address)
 
 while(True):
     
-    sent = sock.sendto("get", server_address)
+    #sent = sock.sendto("get", address)
 
     data, server = sock.recvfrom(65507)
     print("Fragment size : {}".format(len(data)))

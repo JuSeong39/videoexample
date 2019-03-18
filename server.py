@@ -14,10 +14,10 @@ import sys
 from threading import Thread, Lock
 import sys
 
-if(len(sys.argv) != 2):
-        print("Usage : {} interface".format(sys.argv[0]))
-        print("e.g. {} eth0".format(sys.argv[0]))
-        sys.exit(-1)
+#if(len(sys.argv) != 2):
+#        print("Usage : {} interface".format(sys.argv[0]))
+#        print("e.g. {} eth0".format(sys.argv[0]))
+#        sys.exit(-1)
 
 
 def get_ip(interface_name):
@@ -28,8 +28,8 @@ def get_ip(interface_name):
         return ip  # should print "192.168.100.37"
 
 debug = True
-jpeg_quality = 10
-host = get_ip(sys.argv[1])
+jpeg_quality = 90
+host = '203.237.53.160'
 port = 1080
 
 class VideoGrabber(Thread):
@@ -57,6 +57,7 @@ class VideoGrabber(Thread):
 
         def stop(self):
                 self.running = False
+		self.cap.release()
 
         def get_buffer(self):
                 """Method to access the encoded buffer.
@@ -92,27 +93,30 @@ running = True
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Bind the socket to the port
-server_address = (host, port)
+address = (host, port)
 
-print('starting up on %s port %s\n' % server_address)
+#print('starting up on %s port %s\n' % server_address)
 
-sock.bind(server_address)
 
 while(running):
-        data, address = sock.recvfrom(4)
-        if(data == "get"):
-                buffer = grabber.get_buffer()
-                if buffer is None:
-                        continue
-                if len(buffer) > 65507:
-                        print("The message is too large to be sent within a single UDP datagram. We do not handle splitting the message in multiple datagrams")
-                        sock.sendto("FAIL",address)
-                        continue
+        #data, address = sock.recvfrom(4)
+	data = "get"
+	try:
+        	if(data == "get"):
+                	buffer = grabber.get_buffer()
+	                if buffer is None:
+        	                continue
+                	if len(buffer) > 65507:
+	                        print("The message is too large to be sent within a single UDP datagram. We do not handle splitting the message in multiple datagrams")
+                	        continue
                 # We sent back the buffer to the client
-                sock.sendto(buffer.tobytes(), address)
-        elif(data == "quit"):
-                grabber.stop()
-                running = False
+	                sock.sendto(buffer.tobytes(), address)
+        	elif(data == "quit"):
+                	grabber.stop()
+	                running = False
+	except KeyboardInterrupt:
+		grabber.stop()
+		break
         
 print("Quitting..")
 grabber.join()
