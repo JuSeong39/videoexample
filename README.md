@@ -21,3 +21,4 @@ If you wish to quit the server, simply send the command to it :
 
 - echo -n "quit" > /dev/udp/192.168.0.39/1080
 # Video-Streaming
+# videoexample
