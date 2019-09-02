@@ -13,6 +13,10 @@ import cv2
 import sys
 from threading import Thread, Lock
 import sys
+import time
+import base64
+from kafka import KafkaProducer
+import os
 
 #if(len(sys.argv) != 2):
 #        print("Usage : {} interface".format(sys.argv[0]))
@@ -27,10 +31,32 @@ def get_ip(interface_name):
         ip = ni.ifaddresses(interface_name)[2][0]['addr']
         return ip  # should print "192.168.100.37"
 
+def send_frame(path, producer, topic):
+	global data
+	encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+	fname_list = os.listdir(path)
+	fname_list = sorted(fname_list)
+	for i in range(len(fname_list)):
+		read_im = cv2.imread(path+fname_list[i],1)
+		result, img = cv2.imencode('.jpg', read_im, encode_param)
+		producer.send(topic, img.tobytes())
+		#cv2.imshow('read',read_im)
+		#cv2.waitKey(10)
+		print(path + fname_list[i])
+		if i < (len(fname_list)-1):
+			data = "end"
+		#if cv2.waitKey(1) & 0xFF == ord('q'):
+		#	break
+		time.sleep(0.3)
+
 debug = True
 jpeg_quality = 90
-host = '203.237.53.160'
+host = '127.0.0.1'
 port = 1080
+topic = "video1"
+key = "value"
+data = "get"
+path = "/home/mooc/image/"
 
 class VideoGrabber(Thread):
         """A threaded video grabber.
@@ -85,39 +111,43 @@ class VideoGrabber(Thread):
                         self.lock.release()
 
 
-grabber = VideoGrabber(jpeg_quality)
-grabber.start()
+#grabber = VideoGrabber(jpeg_quality)
+#grabber.start()
 
 running = True
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+producer = KafkaProducer(bootstrap_servers=['203.237.53.160:9090'])
+
+#saock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Bind the socket to the port
-address = (host, port)
+#address = (host, port)
 
 #print('starting up on %s port %s\n' % server_address)
 
 
 while(running):
         #data, address = sock.recvfrom(4)
-	data = "get"
 	try:
-        	if(data == "get"):
-                	buffer = grabber.get_buffer()
-	                if buffer is None:
-        	                continue
-                	if len(buffer) > 65507:
-	                        print("The message is too large to be sent within a single UDP datagram. We do not handle splitting the message in multiple datagrams")
-                	        continue
-                # We sent back the buffer to the client
-	                sock.sendto(buffer.tobytes(), address)
-        	elif(data == "quit"):
-                	grabber.stop()
-	                running = False
+		if data == "get":
+			'''
+			buffer = grabber.get_buffer()
+			if buffer is None:
+				continue
+			elif len(buffer) > 65507:
+				print("the message is too long")
+				continue
+			'''
+			#producer.send(topic, buffer.tobytes())
+			send_frame(path, producer, topic)	
+	#		print("sended")
+		elif data == "end":
+			running = False
+			break
 	except KeyboardInterrupt:
-		grabber.stop()
+		running = False
 		break
-        
+ 	time.sleep(0.3)
+       
 print("Quitting..")
-grabber.join()
-sock.close()
+#grabber.join()

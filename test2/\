@@ -1,0 +1,24 @@
+import socket
+import cv2
+import sys
+import time
+import numpy as np
+
+host = '203.237.53.160'
+port = 1080
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+sock.bind((host,port))
+while True:
+	file_name, server = sock.recvfrom(10)
+	time.sleep(0.3)
+	data, server = sock.recvfrom(65507)
+	array = np.frombuffer(data, dtype=np.dtype('uint8'))
+	img = cv2.imdecode(array,1)
+	cv2.imshow('image',img)
+	
+	if cv2.waitKey(1) & 0xFF == ord('q'):
+		break
+
+sock.close()
