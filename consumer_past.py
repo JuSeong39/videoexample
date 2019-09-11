@@ -20,13 +20,12 @@ import os
 
 # Create a UDP socket
 #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-host = '192.168.0.100'
+host = '203.237.53.160'
 port = 1080
 address = (host, port)
 topic = "video1"
-path = "/home/mooc/videoexample/image_test/"
-#path = "/home/mooc/image"
-#mk_path = path + topic + '/'
+path = "/home/mooc/image"
+mk_path = "/home/mooc/img1/"
 #os.mkdir(mk_path, 777)
 
 def recv_frame(topic, value, path, key, starttime):
@@ -38,31 +37,29 @@ def recv_frame(topic, value, path, key, starttime):
 	latency = starttime - time.time()
 	print(latency)
 	time.sleep(0.3)
-	
-
-#sock.bind(address)
-print("consume start")
 key = 0
-consumer = KafkaConsumer(topic, bootstrap_servers='192.168.0.100:9092', auto_offset_reset = 'earliest')
+#sock.bind(address)
+consumer = KafkaConsumer(topic, bootstrap_servers='192.168.0.100:9090', auto_offset_reset = 'earliest')
 #partitions = consumer.poll(timeout)
 while(True):
-	consumer = KafkaConsumer(topic, bootstrap_servers='192.168.0.100:9092', auto_offset_reset = 'earliest')
+	consumer = KafkaConsumer(topic, bootstrap_servers='192.168.0.100:9090', auto_offset_reset = 'earliest')
 	message = next(consumer)
 	for msg in consumer:
 	#for msg in message:
 		if msg.value:
 			#print(len(msg.value))
-			print("consume "+str(key))
+			#key = 0
 			start_time = time.time()
 			array = np.frombuffer(msg.value, dtype=np.dtype('uint8'))
 			img = cv2.imdecode(array,1)
 			#cv2.imshow('recv',img)
-			#cv2.imwrite(mk_path+str(key)+'.jpg', img)
-			cv2.imwrite(path+"frame"+str(key)+".jpg", img)
+			cv2.imwrite(mk_path+"frame"+str(key).zfill(3)+'.jpg', img)
 			key += 1
-			#cv2.waitKey(10)
-			#if cv2.waitKey(1) & 0xFF == ord('q'):
-        		#	break
+			'''
+			cv2.waitKey(10)
+			if cv2.waitKey(1) & 0xFF == ord('q'):
+        			break
+			'''
 			lat = time.time() - start_time
 			print("latency: {} seconds".format(lat))
 			print("bandwidth: {} bytes/sec".format(len(msg.value)/lat))

@@ -51,7 +51,7 @@ def send_frame(path, producer, topic):
 
 debug = True
 jpeg_quality = 90
-host = '127.0.0.1'
+host = '192.168.0.100'
 port = 1080
 topic = "video1"
 key = "value"
@@ -116,7 +116,7 @@ class VideoGrabber(Thread):
 
 running = True
 
-producer = KafkaProducer(bootstrap_servers=['203.237.53.160:9090'])
+producer = KafkaProducer(bootstrap_servers=['192.168.0.100:9092'])
 
 #saock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -147,7 +147,7 @@ while(running):
 	except KeyboardInterrupt:
 		running = False
 		break
- 	time.sleep(0.3)
+ 	time.sleep(0.1)
        
 print("Quitting..")
 #grabber.join()
