@@ -36,27 +36,31 @@ def send_frame(path, producer, topic):
 	encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 	fname_list = os.listdir(path)
 	fname_list = sorted(fname_list)
-	for i in range(len(fname_list)):
-		read_im = cv2.imread(path+fname_list[i],1)
-		result, img = cv2.imencode('.jpg', read_im, encode_param)
-		producer.send(topic, img.tobytes())
+        for i in range(len(fname_list)):
+                if i == len(fname_list):
+                    print("append checksum")
+                    producer.send(topic, b"checksum")
+                else:
+    		    read_im = cv2.imread(path+fname_list[i],1)
+		    result, img = cv2.imencode('.jpg', read_im, encode_param)
+		    producer.send(topic, img.tobytes())
 		#cv2.imshow('read',read_im)
 		#cv2.waitKey(10)
-		print(path + fname_list[i])
-		if i < (len(fname_list)-1):
-			data = "end"
+		    print(path + fname_list[i])
+		    #if i < (len(fname_list)-1):
+			    #data = "end"
 		#if cv2.waitKey(1) & 0xFF == ord('q'):
 		#	break
-		time.sleep(0.3)
+                time.sleep(0.1)
 
 debug = True
 jpeg_quality = 90
-host = '192.168.0.100'
+host = '192.168.100.100'
 port = 1080
-topic = "video1"
+topic = "video"
 key = "value"
 data = "get"
-path = "/home/mooc/image/"
+path = "/home/mooc/image/frame"
 
 class VideoGrabber(Thread):
         """A threaded video grabber.
@@ -116,7 +120,7 @@ class VideoGrabber(Thread):
 
 running = True
 
-producer = KafkaProducer(bootstrap_servers=['192.168.0.100:9092'])
+producer = KafkaProducer(bootstrap_servers=['192.168.100.100:9092'])
 
 #saock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -128,8 +132,9 @@ producer = KafkaProducer(bootstrap_servers=['192.168.0.100:9092'])
 
 while(running):
         #data, address = sock.recvfrom(4)
-	try:
-		if data == "get":
+        for i in range(100):
+	    try:
+	        if data == "get":
 			'''
 			buffer = grabber.get_buffer()
 			if buffer is None:
@@ -138,16 +143,23 @@ while(running):
 				print("the message is too long")
 				continue
 			'''
+                        path_mod = path + str(i) + "/"
+                        topic_mod = topic + str(i)
 			#producer.send(topic, buffer.tobytes())
-			send_frame(path, producer, topic)	
-	#		print("sended")
-		elif data == "end":
-			running = False
-			break
-	except KeyboardInterrupt:
+                        print("current path: " + path_mod)
+                        print("current topic: " + topic_mod)
+		        send_frame(path_mod, producer, topic_mod)
+                        print("produce frame" + str(i) + " completed")
+                        if i == 99:
+                            data = "end"
+	#		    print("sended")
+        	elif data == "end":
+	            running = False
+		    break
+	    except KeyboardInterrupt:
 		running = False
-		break
- 	time.sleep(0.1)
+                break
+ 	#time.sleep(0.1)
        
 print("Quitting..")
 #grabber.join()
